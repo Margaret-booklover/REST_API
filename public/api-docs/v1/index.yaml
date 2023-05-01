@@ -1,0 +1,662 @@
+openapi: 3.0.1
+info:
+  title: Swagger AntiqueStore
+  description: |-
+    Это сервер антикварного магазина, созданный на спецификации OpenAPI 3.0. Особая благодарность выражается проекту
+     https://gitlab.com/greensight/ensi/orders/oms, который был использован в качестве примера и помог
+    разобраться во многих нюансах и ответил на большинство вопросов.
+  contact:
+    name: Маргарита Петрова
+    email: margarita11072002@yandex.ru
+  version: 1.0.0
+servers:
+  - url: /api/v1
+tags:
+  - name: books
+    description: Управление книгами
+  - name: sellers
+    description: Управление продавцами-коллекционерами
+  - name: buyers
+    description: Управление покупателями-сотрудниками магазина
+  - name: protocols
+    description: Управление актами приемки книг в магазин
+paths:
+  /books/{id}:
+    get:
+      tags:
+        - books
+      summary: "Данные о книге по ID"
+      description: "Получите текущую информацию для любой из более чем сотни книг в базе! Поле protocols являются опциональным"
+      x-lg-handler:
+        '\App\Http\ApiV1\Controllers\BookController@get'
+      operationId: GetBook
+      parameters:
+        - $ref: '#/components/parameters/path_id'
+        - $ref: '#/components/parameters/query_include'
+      responses:
+        '200':
+          description: Успех
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Book'
+                  meta:
+                    type: object
+                required:
+                  - data
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    put:
+      tags:
+        - books
+      summary: "Изменить все данные о книге по ID"
+      operationId: ReplaceBook
+      x-lg-handler: '\App\Http\ApiV1\Controllers\BookController@replace'
+      parameters:
+        - $ref: '#/components/parameters/path_id'
+      requestBody:
+        description: "Mогут отсутствовать только необязательные поля, которые в этом случае будут сброшены до значения по умолчанию. ID игнорируется. Hазвание обязательнo!"
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Book'
+        required: true
+      responses:
+        '200':
+          description: Успех
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Book'
+                  meta:
+                    type: object
+                required:
+                  - data
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    patch:
+      tags:
+        - books
+      summary: "Изменить часть данных о книге по ID"
+      operationId: PatchBook
+      x-lg-handler: '\App\Http\ApiV1\Controllers\BookController@patch'
+      requestBody:
+        description: "Только указанные поля будут изменены. ID игнорируется."
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Book'
+        required: true
+      parameters:
+        - $ref: '#/components/parameters/path_id'
+      responses:
+        '200':
+          description: Успех
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Book'
+                  meta:
+                    type: object
+                required:
+                  - data
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    delete:
+      tags:
+        - books
+      summary: "Удалить информацию о книге по ID"
+      operationId: deleteBook
+      x-lg-handler: '\App\Http\ApiV1\Controllers\BookController@delete'
+      parameters:
+        - $ref: '#/components/parameters/path_id'
+      responses:
+        '200':
+          description: Успех
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmptyDataResponse'
+        '400':
+          description: "Неверное значение"
+  /books:
+    post:
+      tags:
+        - books
+      summary: "Добавить новую книгу в базу"
+      description: "Все поля являются обязательными"
+      x-lg-handler: '\App\Http\ApiV1\Controllers\BookController@create'
+      operationId: addBook
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Book'
+        required: true
+      responses:
+        '201':
+          description: "Успех"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Book'
+  /sellers/{id}:
+    get:
+      tags:
+        - sellers
+      summary: "Данные о коллекционере по ID"
+      description: "Получите текущую информацию о любом коллекционере книг в базе! Поле protocols является опциональным"
+      x-lg-handler: '\App\Http\ApiV1\Controllers\SellerController@get'
+      operationId: GetSeller
+      parameters:
+        - $ref: '#/components/parameters/path_id'
+        - $ref: '#/components/parameters/query_include'
+      responses:
+        '200':
+          description: Успех
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Seller'
+                  meta:
+                    type: object
+                required:
+                  - data
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    patch:
+      tags:
+        - sellers
+      summary: "Изменить данные о коллекционере по ID"
+      operationId: PatchSeller
+      x-lg-handler: '\App\Http\ApiV1\Controllers\SellerController@patch'
+      requestBody:
+        description: "Только указанные поля будут изменены. ID игнорируется."
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Seller'
+        required: true
+      parameters:
+        - $ref: '#/components/parameters/path_id'
+      responses:
+        '200':
+          description: Успех
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Seller'
+                  meta:
+                    type: object
+                required:
+                  - data
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    delete:
+      tags:
+        - sellers
+      summary: "Удалить информацию о коллекционере по ID"
+      operationId: deleteSeller
+      x-lg-handler: '\App\Http\ApiV1\Controllers\SellerController@delete'
+      parameters:
+        - $ref: '#/components/parameters/path_id'
+      responses:
+        '200':
+          description: Успех
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmptyDataResponse'
+        '400':
+          description: "Неверное значение"
+  /sellers:
+    post:
+      tags:
+        - sellers
+      summary: "Добавить нового коллекционера в базу"
+      x-lg-handler: '\App\Http\ApiV1\Controllers\SellerController@create'
+      operationId: addSeller
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Seller'
+        required: true
+      responses:
+        '201':
+          description: "Успех"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Seller'
+  /buyers/{id}:
+    get:
+      tags:
+        - buyers
+      summary: "Данные о сотруднике по ID"
+      description: "Получите текущую информацию о любом сотруднике в базе! Поле protocols является опциональным"
+      x-lg-handler: '\App\Http\ApiV1\Controllers\BuyerController@get'
+      operationId: GetBuyer
+      parameters:
+        - $ref: '#/components/parameters/path_id'
+        - $ref: '#/components/parameters/query_include'
+      responses:
+        '200':
+          description: Успех
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Buyer'
+                  meta:
+                    type: object
+                required:
+                  - data
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    patch:
+      tags:
+        - buyers
+      summary: "Изменить данные о сотруднике по ID"
+      operationId: PatchBuyer
+      x-lg-handler: '\App\Http\ApiV1\Controllers\BuyerController@patch'
+      requestBody:
+        description: "Только указанные поля будут изменены. ID игнорируется."
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Buyer'
+        required: true
+      parameters:
+        - $ref: '#/components/parameters/path_id'
+      responses:
+        '200':
+          description: Успех
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Buyer'
+                  meta:
+                    type: object
+                required:
+                  - data
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    delete:
+      tags:
+        - buyers
+      summary: "Удалить информацию о сотруднике по ID"
+      operationId: deleteBuyer
+      x-lg-handler: '\App\Http\ApiV1\Controllers\BuyerController@delete'
+      parameters:
+        - $ref: '#/components/parameters/path_id'
+      responses:
+        '200':
+          description: Успех
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmptyDataResponse'
+        '400':
+          description: "Неверное значение"
+  /buyers:
+    post:
+      tags:
+        - buyers
+      summary: "Добавить нового сотрудника в базу"
+      x-lg-handler: '\App\Http\ApiV1\Controllers\BuyerController@create'
+      operationId: addBuyer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Buyer'
+        required: true
+      responses:
+        '201':
+          description: "Успех"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Buyer'
+  /protocols/{id}:
+    get:
+      tags:
+        - protocols
+      summary: "Данные о договоре купли-продажи по ID"
+      description: "Получите текущую информацию о любом составленном договоре купли-продажи книги"
+      x-lg-handler: '\App\Http\ApiV1\Controllers\ProtocolController@get'
+      operationId: GetProtocol
+      parameters:
+        - $ref: '#/components/parameters/path_id'
+      responses:
+        '200':
+          description: Успех
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Protocol'
+                  meta:
+                    type: object
+                required:
+                  - data
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    patch:
+      tags:
+        - protocols
+      summary: "Изменить данные о договоре купли-продажи по ID"
+      operationId: PatchProtocol
+      x-lg-handler: '\App\Http\ApiV1\Controllers\ProtocolController@patch'
+      requestBody:
+        description: "Только указанные поля будут изменены. ID игнорируется."
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Protocol'
+        required: true
+      parameters:
+        - $ref: '#/components/parameters/path_id'
+      responses:
+        '200':
+          description: Успех
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Protocol'
+                  meta:
+                    type: object
+                required:
+                  - data
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    delete:
+      tags:
+        - protocols
+      summary: "Удалить информацию о договоре купли-продажи по ID"
+      operationId: deleteProtocol
+      x-lg-handler: '\App\Http\ApiV1\Controllers\ProtocolController@delete'
+      parameters:
+        - $ref: '#/components/parameters/path_id'
+      responses:
+        '200':
+          description: Успех
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmptyDataResponse'
+        '400':
+          description: "Неверное значение"
+  /protocols:
+    post:
+      tags:
+        - protocols
+      summary: "Добавить новый договор купли-продажи в базу"
+      x-lg-handler: '\App\Http\ApiV1\Controllers\ProtocolController@create'
+      operationId: addProtocol
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Protocol'
+        required: true
+      responses:
+        '201':
+          description: "Успех"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Protocol'
+components:
+  parameters:
+    path_id:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+      description: Числовой id
+      example: 1
+
+    query_include:
+      in: query
+      name: include
+      required: false
+      description: Связанные сущности для подгрузки, через запятую
+      schema:
+        type: string
+
+
+  schemas:
+    Book:
+      required:
+        - id
+        - title
+      type: object
+      properties:
+        id:
+          type: integer
+          description: идентификатор
+          format: int64
+          example: 10
+        author:
+          type: string
+          example: 'Jack London'
+          description: автор книги
+        title:
+          type: string
+          example: 'White fang'
+          description: заголовок
+        count:
+          type: integer
+          format: int64
+          description: тираж, шт.
+          example: 10000
+        price:
+          type: integer
+          format: int64
+          description: цена, коп.
+          example: 99900
+    Seller:
+      required:
+        - id
+        - fio
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: идентификатор
+          example: 10
+        fio:
+          type: string
+          example: 'Дорогов Виктор Георгиевич'
+          description: ФИО
+        phone:
+          type: string
+          description: телефон
+          example: '+7 800 555 35 35'
+    Buyer:
+      required:
+        - id
+        - fio
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: идентификатор
+          example: 10
+        fio:
+          type: string
+          example: 'Дорогов Виктор Георгиевич'
+          description: ФИО
+        status:
+          type: string
+          example: 'старший менеджер'
+          description: должность
+    Protocol:
+      required:
+        - id
+        - book_id
+        - seller_id
+        - buyer_id
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: идентификатор
+          example: 10
+        book_id:
+          type: integer
+          format: int64
+          description: идентификатор книги
+          example: 20
+        seller_id:
+          type: integer
+          format: int64
+          description: идентификатор коллекционера
+          example: 3
+        buyer_id:
+          type: integer
+          format: int64
+          description: идентификатор сотрудника
+          example: 5
+        date:
+          type: string
+          format: date
+          description: дата продажи
+          example: '2020-02-18'
+
+    ErrorResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          nullable: true
+        errors:
+          type: array
+          description: Массив ошибок
+          items:
+            $ref: '#/components/schemas/Error'
+        meta:
+          type: object
+          description: Объект с мета-информацией
+      required:
+        - data
+        - errors
+    Error:
+      type: object
+      properties:
+        code:
+          description: Строковый код ошибки
+          type: string
+          enum:
+            - "400"
+            - "404"
+            - "500"
+          x-enum-varnames:
+            - BAD_REQUEST
+            - NOT_FOUND
+            - INTERNAL_SERVER_ERROR
+          x-enum-descriptions:
+            - при любых ошибках, причиной которых является клиент
+            - при запросе несуществующего ресурса или экземпляра ресурса
+            - при любой ошибке приложения, причиной которой является проблемы в самом приложении, а не в запросе
+        message:
+          description: Описание ошибки
+          type: string
+        meta:
+          x-skip-response-validation: true
+          type: object
+          description: Объект с мета-информацией
+      required:
+        - code
+        - message
+    EmptyDataResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          nullable: true
+          example: null
+        meta:
+          type: object
+      required:
+        - data
+
+  responses:
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    ServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
